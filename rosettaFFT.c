@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <math.h>
+#include<stdlib.h>
+#include <complex.h>
+#define SAMPLE_N 2048
+ 
+double PI;
+typedef double complex cplx;
+ 
+void _fft(cplx buf[], cplx out[], int n, int step)
+{
+	if (step < n) {
+		_fft(out, buf, n, step * 2);
+		_fft(out + step, buf + step, n, step * 2);
+ 
+		for (int i = 0; i < n; i += 2 * step) {
+			cplx t = cexp(-I * PI * i / n) * out[i + step];
+			buf[i / 2]     = out[i] + t;
+			buf[(i + n)/2] = out[i] - t;
+		}
+	}
+}
+ 
+void fft(cplx buf[], int n)
+{
+	cplx out[n];
+	for (int i = 0; i < n; i++) out[i] = buf[i];
+ 
+	_fft(buf, out, n, 1);
+}
+ 
+ 
+void show(const char * s, cplx buf[]) {
+	printf("%s", s);
+	for (int i = 0; i < SAMPLE_N; i++)
+		if (!cimag(buf[i]))
+			printf("%g ", creal(buf[i]));
+		else
+			printf("(%g, %g) ", creal(buf[i]), cimag(buf[i]));
+}
+
+float randomFloat(){
+  return (float)rand() / (float)(RAND_MAX);
+}
+
+int main()
+{
+	PI = atan2(1, 1) * 4;
+	cplx buf[SAMPLE_N];
+
+  for(int i=0;i<SAMPLE_N;i++){
+    buf[i] = randomFloat();
+  }
+ 
+	show("Data: ", buf);
+	fft(buf, SAMPLE_N);
+	show("\nFFT : ", buf);
+ 
+	return 0;
+}
