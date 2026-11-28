@@ -2,7 +2,7 @@
 #include <math.h>
 #include<stdlib.h>
 #include <complex.h>
-#define SAMPLE_N 2048
+#define SAMPLE_N 16 
  
 double PI;
 typedef double complex cplx;
@@ -28,7 +28,30 @@ void fft(cplx buf[], int n)
  
 	_fft(buf, out, n, 1);
 }
- 
+
+void _ifft(cplx buf[], cplx out[], int n, int step){
+  if(step < n){
+    _ifft(out, buf, n , step*2);
+    _ifft(out + step, buf + step, n, step*2);
+
+    for(int i=0;i<n;i+=2*step){
+      cplx t = cexp(I * PI * i / n) * out[i+step];
+      buf[i / 2]     = out[i] + t;
+      buf[(i + n)/2] = out[i] - t;
+    }
+  }
+}
+
+void ifft(cplx buf[], int n){
+  cplx out[n];
+  for(int i=0;i<n;i++){
+    out[i] = buf[i];
+  }
+  _ifft(buf, out, n, 1);
+  for(int i=0;i<n;i++){
+    buf[i]/=n;
+  }
+}
  
 void show(const char * s, cplx buf[]) {
 	printf("%s", s);
@@ -55,6 +78,8 @@ int main()
 	show("Data: ", buf);
 	fft(buf, SAMPLE_N);
 	show("\nFFT : ", buf);
+  ifft(buf, SAMPLE_N);
+	show("\nInverse FFT : ", buf);
  
 	return 0;
 }
